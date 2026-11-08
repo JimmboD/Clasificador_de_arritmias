@@ -1,0 +1,19 @@
+# Entorno virtual (muy importante ignorarlo)
+.venv/
+venv/
+
+# Carpetas con tus gigas de datos (ajusta el nombre a como se llame tu carpeta)
+Data/
+Dataset/
+Database/
+Models/
+spectrograms/
+
+# Archivos pesados o temporales
+*.atr
+*.csv
+*.h5
+*.pt
+*.pth
+*.dat
+__pycache__/

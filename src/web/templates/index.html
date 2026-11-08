@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioLab | Sistema Experimental de Análisis Electrocardiográfico</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>CardioLab</h1>
+                    <span class="subtitle">ECG Research Workstation</span>
+                </div>
+            </div>
+
+            <div class="research-badge">
+                <span class="research-dot"></span>
+                <span>PROTOCOLO EXPERIMENTAL</span>
+            </div>
+
+            <nav class="nav-menu">
+                <!-- WORKFLOW PRINCIPAL -->
+                <button class="nav-item active" data-tab="tab-csv" id="btn-tab-csv">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Clasificar Señal CSV (Principal)</span>
+                </button>
+                <button class="nav-item" data-tab="tab-eval-raw" id="btn-tab-eval-raw">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Inferencia Paciente MIT-BIH</span>
+                </button>
+                <button class="nav-item" data-tab="tab-eval-npz" id="btn-tab-eval-npz">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Evaluación por Lote (.npz)</span>
+                </button>
+                <button class="nav-item" data-tab="tab-vt" id="btn-tab-vt">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Taquicardia Ventricular (VT)</span>
+                </button>
+                <button class="nav-item" data-tab="tab-inspect" id="btn-tab-inspect">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Auditoría & Comparativa (.atr)</span>
+                </button>
+                <button class="nav-item" data-tab="tab-data" id="btn-tab-data">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Curaduría & Datasets</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="system-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Motor Backend Conectado</span>
+                </div>
+                <div class="tech-stack">TensorFlow • WFDB • STFT • Keras</div>
+                <div class="disclaimer-text">Estudio experimental de investigación biomecánica y clínica.</div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Clinical Header -->
+            <header class="top-header">
+                <div class="header-title">
+                    <div class="protocol-tag">
+                        <span class="tag-accent">WORKFLOW CLÍNICO EXPERIMENTAL</span>
+                        <span class="tag-sep">•</span>
+                        <span>Filtro Butterworth 40Hz • Segmentación R • STFT 2D • Inferencia CNN</span>
+                    </div>
+                    <h2 id="section-title">Clasificación de Señal Externa (CSV)</h2>
+                    <p id="section-desc">Carga cualquier archivo con datos de voltaje vs tiempo. El sistema filtrará la señal, detectará cada latido, calculará su espectrograma y clasificará cada pulso con gráficas reciclables en memoria.</p>
+                </div>
+                <div class="header-badges">
+                    <div class="badge-card">
+                        <span class="badge-label">Frecuencia Base</span>
+                        <span class="badge-value">360 Hz</span>
+                    </div>
+                    <div class="badge-card">
+                        <span class="badge-label">Ventana Pulso</span>
+                        <span class="badge-value">270 pts (0.75s)</span>
+                    </div>
+                    <div class="badge-card">
+                        <span class="badge-label">Tensor STFT</span>
+                        <span class="badge-value highlight">29 × 112</span>
+                    </div>
+                    <div class="badge-card">
+                        <span class="badge-label">Modelo Activo</span>
+                        <span class="badge-value highlight" id="stat-model">V6.0 (Rechazo)</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Container for Tab Content -->
+            <div class="content-body">
+
+                <!-- ======================================================== -->
+                <!-- TAB PRINCIPAL: CLASIFICAR SEÑAL CSV (PULSO POR PULSO)     -->
+                <!-- ======================================================== -->
+                <section class="tab-pane active" id="tab-csv">
+                    <div class="card control-panel">
+                        <div class="card-header-compact">
+                            <span class="card-tag">SUBIDA DE SEÑAL ELECTROCARDIOGRÁFICA EXTERNA</span>
+                        </div>
+
+                        <!-- Dropzone / File Picker -->
+                        <div class="csv-upload-box" id="csv-dropzone">
+                            <input type="file" id="input-csv-file" accept=".csv,.txt,.tsv,.dat" style="display: none;">
+                            <div class="upload-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                            </div>
+                            <div class="upload-text">
+                                <strong id="csv-file-name">Arrastra y suelta tu archivo CSV aquí, o haz clic para seleccionarlo</strong>
+                                <span class="upload-sub">Admite columnas [tiempo, voltaje] o únicamente [voltaje] en cualquier formato delimitado</span>
+                            </div>
+                            <div class="upload-actions">
+                                <button type="button" class="btn btn-secondary btn-sm" id="btn-browse-csv">
+                                    <span class="btn-text">Seleccionar Archivo</span>
+                                </button>
+                                <button type="button" class="btn btn-ghost btn-sm" id="btn-load-sample-csv">
+                                    <span class="btn-text">Cargar Señal de Prueba (20s)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Form Parameters -->
+                        <div class="form-row" style="margin-top: 18px;">
+                            <div class="form-group" style="max-width: 220px;">
+                                <label for="input-csv-fs">Frecuencia de Muestreo (Fs en Hz):</label>
+                                <input type="number" id="input-csv-fs" class="form-control" value="360" min="20" max="5000" step="1">
+                            </div>
+                            <div class="form-group" style="max-width: 260px;">
+                                <label for="select-csv-model">Modelo CNN de Inferencia:</label>
+                                <select id="select-csv-model" class="form-control"></select>
+                            </div>
+                            <div class="form-group button-group">
+                                <button class="btn btn-primary" id="btn-run-csv">
+                                    <span class="btn-spinner" style="display:none;">
+                                        <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"></circle></svg>
+                                    </span>
+                                    <span class="btn-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                        </svg>
+                                    </span>
+                                    <span class="btn-text">Filtrar, Segmentar y Clasificar Señal</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Card de Extracción Pura desde Base Natural MIT-BIH (Cero Fuga de Datos) -->
+                        <div class="extract-db-box" style="margin-top: 22px; padding: 18px 20px; border-radius: var(--radius-sm); background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(56, 189, 248, 0.25);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <svg style="width: 18px; height: 18px; color: var(--accent-cyan);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                    </svg>
+                                    <strong style="font-size: 0.9rem; color: var(--text-primary); letter-spacing: 0.3px;">Extraer Muestra desde Base de Datos MIT-BIH</strong>
+                                </div>
+                                <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.72rem; padding: 3px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 12px; height: 12px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                                    Cero Fuga de Datos (Blind Signal)
+                                </span>
+                            </div>
+
+                            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.45;">
+                                Selecciona cualquier paciente de la base natural y extrae un segmento de prueba de <strong>X segundos</strong>. Se genera exclusivamente una serie continua física (<code>tiempo</code>, <code>voltaje</code>) descartando cualquier anotación clínica (<code>.atr</code>) para evitar la fuga de datos y someterlo de forma 100% ciega a todo el pipeline.
+                            </p>
+
+                            <div class="form-row" style="align-items: flex-end; gap: 14px;">
+                                <div class="form-group" style="min-width: 160px; max-width: 220px;">
+                                    <label for="select-extract-record">Registro / Paciente:</label>
+                                    <select id="select-extract-record" class="form-control"></select>
+                                </div>
+
+                                <div class="form-group" style="min-width: 220px; max-width: 320px;">
+                                    <label for="input-extract-duration">Duración de la Prueba (segundos):</label>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <input type="number" id="input-extract-duration" class="form-control" value="20" min="1" max="1800" step="1" style="max-width: 80px;" title="Duración en segundos">
+                                        <div class="btn-group-chips">
+                                            <button type="button" class="chip-btn" data-sec="10">10s</button>
+                                            <button type="button" class="chip-btn active" data-sec="20">20s</button>
+                                            <button type="button" class="chip-btn" data-sec="30">30s</button>
+                                            <button type="button" class="chip-btn" data-sec="60">60s</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" style="max-width: 110px;">
+                                    <label for="input-extract-start">Inicio (seg):</label>
+                                    <input type="number" id="input-extract-start" class="form-control" value="0" min="0" step="1" title="Offset inicial en segundos">
+                                </div>
+
+                                <div class="form-group button-group" style="display: flex; gap: 10px; margin-left: auto;">
+                                    <button type="button" class="btn btn-primary" id="btn-extract-load">
+                                        <span class="btn-spinner" style="display:none;">
+                                            <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"></circle></svg>
+                                        </span>
+                                        <span class="btn-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="23 4 23 10 17 10"></polyline>
+                                                <polyline points="1 20 1 14 7 14"></polyline>
+                                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                            </svg>
+                                        </span>
+                                        <span class="btn-text">Extraer y Cargar al Workflow</span>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="btn-extract-download" title="Descargar archivo CSV puro">
+                                        <span class="btn-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="7 10 12 15 17 10"></polyline>
+                                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                                            </svg>
+                                        </span>
+                                        <span class="btn-text">Descargar CSV</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="extract-status-banner" style="display: none; margin-top: 14px; font-size: 0.82rem; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);"></div>
+                        </div>
+                    </div>
+
+                    <!-- Resultados del Análisis CSV (Oculto al inicio) -->
+                    <div id="csv-results-wrapper" style="display: none; display: flex; flex-direction: column; gap: 24px;">
+                        
+                        <!-- Tarjetas de Telemetría Global -->
+                        <div class="stats-row">
+                            <div class="stat-box">
+                                <span class="stat-title">Pulsos Detectados</span>
+                                <span class="stat-value highlight" id="csv-stat-total">0</span>
+                                <span class="stat-sub" id="csv-stat-duration">Duración: 0.0s</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-title">Frecuencia Cardíaca</span>
+                                <span class="stat-value" id="csv-stat-bpm">0 BPM</span>
+                                <span class="stat-sub" id="csv-stat-bpm-range">Rango: 0 - 0 BPM</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-title">Latidos Normales (N)</span>
+                                <span class="stat-value text-success" id="csv-stat-normal">0</span>
+                                <span class="stat-sub" id="csv-stat-normal-pct">100% de la señal</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-title">Latidos con Arritmias</span>
+                                <span class="stat-value text-danger" id="csv-stat-arrhythmias">0</span>
+                                <span class="stat-sub" id="csv-stat-arrhythmias-pct">0.0% de incidencia</span>
+                            </div>
+                        </div>
+
+                        <!-- Monitor de la Señal Continua con Picos R Marcados -->
+                        <div class="card ecg-monitor-card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <span class="pulse-indicator"></span>
+                                    <span>Trazado Continuo Acondicionado (Filtro Butterworth 40Hz) con Marcadores de Latido</span>
+                                </div>
+                                <span class="ecg-stats" id="csv-ecg-info">360 Hz • Papel Milimetrado Virtual</span>
+                            </div>
+                            <div class="canvas-container">
+                                <canvas id="csv-canvas-overview" width="1100" height="150"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Panel Dividido: Tabla de Pulsos (Izquierda) + Visor Clínico Reciclable (Derecha) -->
+                        <div class="csv-pulse-analysis-grid">
+                            
+                            <!-- Columna 1: Tabla de todos los pulsos -->
+                            <div class="card pulse-table-card">
+                                <div class="card-header">
+                                    <div>
+                                        <h3 class="card-title">Listado de Pulsos Detectados</h3>
+                                        <p class="card-desc">Haz clic en cualquier fila para inspeccionar su corte 1D y espectrograma 2D en tiempo real.</p>
+                                    </div>
+                                    <div class="pulse-table-tools">
+                                        <button class="btn btn-outline btn-sm" id="btn-export-csv-report">
+                                            <span class="btn-icon">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                </svg>
+                                            </span>
+                                            <span class="btn-text">Descargar CSV</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="filter-pills">
+                                    <button class="pill-btn active" data-filter="all">Todos (<span id="pill-count-all">0</span>)</button>
+                                    <button class="pill-btn" data-filter="arrhythmias">Solo Arritmias (<span id="pill-count-arr">0</span>)</button>
+                                    <button class="pill-btn" data-filter="normal">Solo Normales (<span id="pill-count-norm">0</span>)</button>
+                                </div>
+
+                                <div class="table-container pulse-table-scroll">
+                                    <table class="custom-table" id="table-csv-pulses">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Tiempo</th>
+                                                <th>R-R</th>
+                                                <th>BPM</th>
+                                                <th>Clase</th>
+                                                <th>Diagnóstico Clínico</th>
+                                                <th>Confianza</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbody-csv-pulses"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Columna 2: Visor de Pulso Clínico (Canvas Reciclables en Memoria) -->
+                            <div class="card pulse-viewer-card">
+                                <div class="card-header">
+                                    <div>
+                                        <h3 class="card-title" id="viewer-title">Visor Clínico del Latido</h3>
+                                        <span class="lead-badge" id="viewer-badge-severity">Normal</span>
+                                    </div>
+                                    <div class="pulse-nav-arrows">
+                                        <button class="btn btn-ghost btn-sm" id="btn-prev-pulse" title="Latido Anterior">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                        </button>
+                                        <span id="viewer-pulse-counter" style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700;">1 / 1</span>
+                                        <button class="btn btn-ghost btn-sm" id="btn-next-pulse" title="Latido Siguiente">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Gráfica Reciclable 1: Corte del Latido 1D (270 muestras) -->
+                                <div class="viewer-section">
+                                    <div class="section-microheader">
+                                        <span class="microheader-title">1. FORMA DE ONDA 1D AISLADA (270 MUESTRAS ESTANDARIZADAS)</span>
+                                        <span class="microheader-info">Ventana Asimétrica 0.75s (35% pre-R, 65% post-R)</span>
+                                    </div>
+                                    <div class="canvas-box">
+                                        <canvas id="canvas-pulse-1d" width="520" height="135"></canvas>
+                                    </div>
+                                </div>
+
+                                <!-- Gráfica Reciclable 2: Transformada STFT 2D (Espectrograma 29x112) -->
+                                <div class="viewer-section">
+                                    <div class="section-microheader">
+                                        <span class="microheader-title">2. TRANSFORMADA STFT 2D (ESPECTROGRAMA NORMALIZADO [0, 1])</span>
+                                        <span class="microheader-info">Tensor de Entrada CNN: 29 frecuencias × 112 tiempos</span>
+                                    </div>
+                                    <div class="canvas-box">
+                                        <canvas id="canvas-pulse-stft" width="520" height="135"></canvas>
+                                    </div>
+                                    <div class="stft-axis-labels">
+                                        <span>f: 0 Hz</span>
+                                        <span>Escala Espectral STFT (frecuencia recortada $\le$ 40 Hz)</span>
+                                        <span>f: 40 Hz</span>
+                                    </div>
+                                </div>
+
+                                <!-- Gráfica 3: Probabilidades de Clasificación por la CNN -->
+                                <div class="viewer-section">
+                                    <div class="section-microheader">
+                                        <span class="microheader-title">3. DISTRIBUCIÓN DE PROBABILIDADES DE LA RED NEURONAL</span>
+                                        <span class="microheader-info">Predicción final y margen de certeza diagnóstica</span>
+                                    </div>
+                                    <div class="pulse-prob-bars" id="pulse-prob-bars"></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ======================================================== -->
+                <!-- TAB 2: EVALUAR PACIENTE CRUDO MIT-BIH                    -->
+                <!-- ======================================================== -->
+                <section class="tab-pane" id="tab-eval-raw">
+                    <div class="card control-panel">
+                        <div class="card-header-compact">
+                            <span class="card-tag">PARÁMETROS DEL ENSAYO CLÍNICO</span>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="select-patient-raw">Paciente / Registro MIT-BIH:</label>
+                                <select id="select-patient-raw" class="form-control"></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="select-model-raw">Red Neuronal Convolucional:</label>
+                                <select id="select-model-raw" class="form-control"></select>
+                            </div>
+                            <div class="form-group button-group">
+                                <button class="btn btn-primary" id="btn-run-raw">
+                                    <span class="btn-spinner" style="display:none;">
+                                        <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"></circle></svg>
+                                    </span>
+                                    <span class="btn-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                        </svg>
+                                    </span>
+                                    <span class="btn-text">Ejecutar Diagnóstico End-to-End</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live ECG Monitor Canvas -->
+                    <div class="card ecg-monitor-card" id="card-ecg-monitor">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span class="pulse-indicator"></span>
+                                <span>Monitor de Telemetría Cardíaca en Tiempo Real</span>
+                                <span class="lead-badge">Derivación MLII • 10 mm/mV • 25 mm/s</span>
+                            </div>
+                            <div class="ecg-actions">
+                                <span class="ecg-stats" id="ecg-sample-info">Paciente: 100 • 360 Hz • Filtro Butterworth 40Hz</span>
+                                <button class="btn btn-ghost btn-sm" id="btn-toggle-ecg" title="Pausar / Reanudar Monitor">
+                                    <span class="btn-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="6" y="4" width="4" height="16"></rect>
+                                            <rect x="14" y="4" width="4" height="16"></rect>
+                                        </svg>
+                                    </span>
+                                    <span class="btn-text">Pausar</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="canvas-container">
+                            <canvas id="ecg-canvas" width="1100" height="160"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div class="results-grid" id="raw-results-container" style="display: none;">
+                        <div class="card matrix-card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Matriz de Confusión Experimental (9×9 con Rechazo Clínico)</div>
+                                    <p class="card-desc">Fila: Clase Real del Cardiólogo (.atr) | Columna: Inferencia del Modelo CNN</p>
+                                </div>
+                                <span class="badge badge-success" id="raw-accuracy-badge">Exactitud: 97.4%</span>
+                            </div>
+                            <div class="matrix-wrapper" id="raw-matrix-wrapper"></div>
+                            <div class="matrix-legend">
+                                <span class="legend-item"><span class="legend-color high"></span> Alta coincidencia</span>
+                                <span class="legend-item"><span class="legend-color mid"></span> Coincidencia media</span>
+                                <span class="legend-item"><span class="legend-color err"></span> Falsa detección / Confusión</span>
+                                <span class="legend-item"><span class="legend-color zero"></span> 0 casos</span>
+                            </div>
+                        </div>
+
+                        <div class="card metrics-card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Desempeño Clínico por Tipo de Complejo</div>
+                                    <p class="card-desc">Evaluación estadística rigurosa acorde al estándar AAMI</p>
+                                </div>
+                                <span class="badge badge-outline" id="raw-total-beats">Latidos: 2271</span>
+                            </div>
+                            <div class="table-container">
+                                <table class="custom-table" id="table-raw-metrics">
+                                    <thead>
+                                        <tr>
+                                            <th>Clase</th>
+                                            <th>Diagnóstico Clínico</th>
+                                            <th>Sensibilidad (Recall)</th>
+                                            <th>VPP (Precisión)</th>
+                                            <th>F1-Score</th>
+                                            <th>Muestras</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-raw-metrics"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ======================================================== -->
+                <!-- TAB 3: EVALUAR DESDE .NPZ                                -->
+                <!-- ======================================================== -->
+                <section class="tab-pane" id="tab-eval-npz">
+                    <div class="card control-panel">
+                        <div class="card-header-compact">
+                            <span class="card-tag">EVALUACIÓN DE TENSORES PREPROCESADOS</span>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="select-npz-file">Archivo de Tensores (.npz en Data/Raw_data):</label>
+                                <select id="select-npz-file" class="form-control"></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="select-model-npz">Modelo CNN a Validar:</label>
+                                <select id="select-model-npz" class="form-control"></select>
+                            </div>
+                            <div class="form-group button-group">
+                                <button class="btn btn-secondary" id="btn-run-npz">
+                                    <span class="btn-spinner" style="display:none;">
+                                        <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"></circle></svg>
+                                    </span>
+                                    <span class="btn-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                        </svg>
+                                    </span>
+                                    <span class="btn-text">Evaluar Tensor .npz</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="results-grid" id="npz-results-container" style="display: none;">
+                        <div class="card matrix-card">
+                            <div class="card-header">
+                                <div class="card-title">Matriz de Confusión (.npz)</div>
+                                <span class="badge badge-success" id="npz-accuracy-badge"></span>
+                            </div>
+                            <div class="matrix-wrapper" id="npz-matrix-wrapper"></div>
+                        </div>
+                        <div class="card metrics-card">
+                            <div class="card-header">
+                                <div class="card-title">Reporte Clínico de Rendimiento</div>
+                                <span class="badge badge-outline" id="npz-total-beats"></span>
+                            </div>
+                            <div class="table-container">
+                                <table class="custom-table" id="table-npz-metrics">
+                                    <thead>
+                                        <tr>
+                                            <th>Clase</th>
+                                            <th>Sensibilidad</th>
+                                            <th>Precisión</th>
+                                            <th>F1-Score</th>
+                                            <th>Soporte</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-npz-metrics"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ======================================================== -->
+                <!-- TAB 4: TAQUICARDIA VENTRICULAR (VT)                      -->
+                <!-- ======================================================== -->
+                <section class="tab-pane" id="tab-vt">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Detector Clínico de Taquicardia Ventricular (VT)</h3>
+                                <p class="card-desc">Criterio estricto de cardiología: Detección de ráfagas ventriculares $\ge 3$ latidos <code>V</code> consecutivos o etiqueta de ritmo explícita <code>(VT</code>.</p>
+                            </div>
+                            <button class="btn btn-warning" id="btn-scan-vt">
+                                <span class="btn-spinner" style="display:none;">
+                                    <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"></circle></svg>
+                                </span>
+                                <span class="btn-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                    </svg>
+                                </span>
+                                <span class="btn-text">Iniciar Escaneo Global en MIT-BIH</span>
+                            </button>
+                        </div>
+                        <div class="vt-summary" id="vt-summary-bar" style="display: none;">
+                            <span class="badge badge-danger" id="vt-count-badge">Total Episodios: 0</span>
+                            <span class="text-muted">Análisis automático sobre los 48 registros de 30 minutos a 360 Hz.</span>
+                        </div>
+                        <div class="table-container" style="max-height: 520px; overflow-y: auto;">
+                            <table class="custom-table" id="table-vt-results">
+                                <thead>
+                                    <tr>
+                                        <th>Registro</th>
+                                        <th>Tiempo (MM:SS)</th>
+                                        <th>Muestra Exacta</th>
+                                        <th>Tipo de Detección</th>
+                                        <th>Severidad Clínica</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-vt-results">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Haz clic en "Iniciar Escaneo Global" para analizar la base de datos completa.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ======================================================== -->
+                <!-- TAB 5: AUDITORÍA & INSPECTOR                             -->
+                <!-- ======================================================== -->
+                <section class="tab-pane" id="tab-inspect">
+                    <div class="card control-panel">
+                        <div class="card-header-compact">
+                            <span class="card-tag">AUDITORÍA DE CONSISTENCIA DE LATIDOS</span>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="select-inspect-patient">Registro de Paciente a Auditar:</label>
+                                <select id="select-inspect-patient" class="form-control"></select>
+                            </div>
+                            <div class="form-group button-group">
+                                <button class="btn btn-info" id="btn-run-inspect">
+                                    <span class="btn-spinner" style="display:none;">
+                                        <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"></circle></svg>
+                                    </span>
+                                    <span class="btn-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                        </svg>
+                                    </span>
+                                    <span class="btn-text">Inspeccionar & Comparar vs .atr Oficial</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="inspect-grid" id="inspect-container" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Metadatos Técnicos del Tensor .npz</h3>
+                            </div>
+                            <div class="info-list" id="inspect-tensor-info"></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Comparativa de Detección: Algoritmo (Picos R) vs Cardiólogo (.atr)</h3>
+                            </div>
+                            <div class="table-container">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Etiqueta</th>
+                                            <th>Tu Algoritmo (Picos R)</th>
+                                            <th>Cardiólogo MIT-BIH (.atr)</th>
+                                            <th>Discrepancia</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-inspect-comp"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ======================================================== -->
+                <!-- TAB 6: PREPROCESAMIENTO & DATASETS                       -->
+                <!-- ======================================================== -->
+                <section class="tab-pane" id="tab-data">
+                    <div class="grid-2-cols">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Fase 1 & 2: Preprocesamiento por Lotes</h3>
+                                <p class="card-desc">Filtro Butterworth (40 Hz), detección R con salto refractario 200ms y STFT 2D.</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-preprocess-rec">Preprocesar Registro Individual:</label>
+                                <div class="button-row">
+                                    <input type="text" id="input-preprocess-rec" class="form-control" value="100" style="max-width: 140px;" placeholder="ej. 100">
+                                    <button class="btn btn-outline" id="btn-preprocess-single">
+                                        <span class="btn-spinner" style="display:none;">
+                                            <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"></circle></svg>
+                                        </span>
+                                        <span class="btn-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polyline points="23 4 23 10 17 10"></polyline>
+                                                <polyline points="1 20 1 14 7 14"></polyline>
+                                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                            </svg>
+                                        </span>
+                                        <span class="btn-text">Procesar Registro</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <hr class="divider">
+                            <div class="form-group">
+                                <label>Procesamiento Masivo de la Base de Datos:</label>
+                                <p class="text-muted small">Itera sobre los 48 registros (100 al 234) extrayendo tensores normalizados a <code>Data/Raw_data/</code>.</p>
+                                <button class="btn btn-primary" id="btn-preprocess-all">
+                                    <span class="btn-spinner" style="display:none;">
+                                        <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"></circle></svg>
+                                    </span>
+                                    <span class="btn-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                        </svg>
+                                    </span>
+                                    <span class="btn-text">Procesar Base Completa (100-234)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Fase 3 & 4: Unificación y Filtrado AAMI</h3>
+                                <p class="card-desc">Consolidación de tensores individuales y depuración de clases viables.</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Paso 1: Unificar Archivos .npz</label>
+                                <p class="text-muted small">Concatena todos los latidos extraídos en <code>Data/Raw_data/dataset_unificado.npz</code>.</p>
+                                <button class="btn btn-secondary" id="btn-unify-dataset">
+                                    <span class="btn-spinner" style="display:none;">
+                                        <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"></circle></svg>
+                                    </span>
+                                    <span class="btn-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                                            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                                            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                                        </svg>
+                                    </span>
+                                    <span class="btn-text">Unificar Tensores (.npz)</span>
+                                </button>
+                            </div>
+                            <hr class="divider">
+                            <div class="form-group">
+                                <label>Paso 2: Filtrar Ruido y Formar Dataset Limpio</label>
+                                <p class="text-muted small">Elimina artefactos/ruido y conserva estrictamente las 8 clases viables AAMI con $>600$ muestras.</p>
+                                <button class="btn btn-success" id="btn-filter-dataset">
+                                    <span class="btn-spinner" style="display:none;">
+                                        <svg class="spin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-linecap="round"></circle></svg>
+                                    </span>
+                                    <span class="btn-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    </span>
+                                    <span class="btn-text">Generar Dataset Limpio AAMI</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
